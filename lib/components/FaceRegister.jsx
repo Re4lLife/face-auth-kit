@@ -1,290 +1,207 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import { FaceLivenessDetectorCore } from '@aws-amplify/ui-react-liveness'
+import '@aws-amplify/ui-react/styles.css'
 import SiriWave from './internal/SiriWave'
-import FaceOval from './internal/FaceOval'
-import CameraView from './internal/CameraView'
-import { useLiveness } from '../hooks/useLiveness'
+
+const FRIENDLY_ERRORS = {
+  NO_FACE_DETECTED:     'No face detected. Please ensure your face is clearly visible.',
+  NO_REFERENCE_IMAGE:   'Could not capture your face. Please try again in better lighting.',
+  LIVENESS_FAILED:      'Liveness check failed. Please try again.',
+  SESSION_EXPIRED:      'Session expired. Please try again.',
+  SESSION_CREATE_ERROR: 'Could not start liveness session. Check your connection and try again.',
+  MISSING_ROLE_ARN:     'Server configuration error. Please contact support.',
+  AWS_ERROR:            'Something went wrong. Please try again.',
+}
 
 export default function FaceRegister({
   collectionId,
   onSuccess,
   onError,
-  mode = 'liveness',
-  apiEndpoint = '/api/face-register',
-  livenessApiEndpoint = '/api/face-liveness-check',
+  sessionApiEndpoint = '/api/face-liveness-session',
+  resultApiEndpoint  = '/api/face-liveness-result',
   theme = 'dark',
   className = '',
 }) {
-  const [ovalState, setOvalState] = useState('idle')
-  const [waveState, setWaveState] = useState('idle')
+  const [phase, setPhase]               = useState('init')
+  const [sessionData, setSessionData]   = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
-  const [cameraReady, setCameraReady] = useState(false)
+  const [waveState, setWaveState]       = useState('idle')
 
-  const cameraRef = useRef(null)
-  const shouldCaptureRef = useRef(false)
-  const captureTriggeredRef = useRef(false)
+  // clock offset stored in ref — avoids Date.now() during render
+  const clockOffsetRef = useRef(0)
+  const sessionStarted = useRef(false)
 
   const isDark = theme === 'dark'
 
-  const { direction, livenessState, progress, start: startLiveness, reset: resetLiveness } = useLiveness({
-    apiEndpoint: livenessApiEndpoint,
-  })
+  // ─── handleError declared first — everything below may call it ───────────────
+const handleError = useCallback((error) => {
+  setPhase('error')
+  setWaveState('error')
+  setErrorMessage(error.message)
+  onError?.(error)
+}, [onError])
 
-  // ─── Declared before any useEffect that references it ────────────────────────
-  async function handleCapture() {
-    const base64 = cameraRef.current?.capture?.()
-    if (!base64) {
-      setOvalState('error')
-      setWaveState('error')
-      setErrorMessage('Could not capture image. Please try again.')
-      onError?.({ code: 'CAPTURE_FAILED', message: 'Could not capture image.' })
+  // ─── Start session ────────────────────────────────────────────────────────────
+const startSession = useCallback(async () => {
+  setPhase('init')
+  setErrorMessage('')
+  setWaveState('scanning')
+
+  try {
+    const before = Date.now()
+    const res = await fetch(sessionApiEndpoint, { method: 'POST' })
+    const data = await res.json()
+
+    if (!res.ok) throw { code: data.code, message: data.message }
+
+    const rtt = Date.now() - before
+    clockOffsetRef.current = rtt > 5 * 60 * 1000 ? rtt : 0
+
+    setSessionData(data)
+    setPhase('liveness')
+  } catch (err) {
+    const code = err.code || 'SESSION_CREATE_ERROR'
+    handleError({ code, message: FRIENDLY_ERRORS[code] || err.message })
+  }
+}, [sessionApiEndpoint, handleError])
+
+  // ─── Kick off on mount — guard prevents double-fire in React strict mode ──────
+  useEffect(() => {
+    if (sessionStarted.current) return
+    sessionStarted.current = true
+    const t = setTimeout(() => { startSession() }, 0)
+    return () => clearTimeout(t)
+  }, [startSession])
+
+  // ─── Amplify complete → fetch result ─────────────────────────────────────────
+  async function handleAnalysisComplete() {
+    setPhase('processing')
+    setWaveState('scanning')
+
+    try {
+      const res = await fetch(resultApiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionData.sessionId, collectionId, mode: 'register' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw { code: data.code, message: data.message }
+      setPhase('success')
+      setWaveState('success')
+      onSuccess?.(data)
+    } catch (err) {
+      const code = err.code || 'AWS_ERROR'
+      handleError({ code, message: FRIENDLY_ERRORS[code] || err.message })
+    }
+  }
+
+  // ─── Amplify liveness error ───────────────────────────────────────────────────
+  function handleLivenessError(err) {
+    if (err?.state === 'CONNECTION_TIMEOUT' || err?.state === 'SERVER_ERROR') {
+      handleError({ code: 'SESSION_EXPIRED', message: FRIENDLY_ERRORS['SESSION_EXPIRED'] })
       return
     }
-
-    setOvalState('captured')
-    setWaveState('idle')
-
-    setTimeout(async () => {
-      setOvalState('loading')
-      try {
-        const res = await fetch(apiEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64, collectionId }),
-        })
-
-        const data = await res.json()
-
-        if (!res.ok) {
-          throw { code: data.code || 'API_ERROR', message: data.message || 'Registration failed.' }
-        }
-
-        setOvalState('success')
-        setWaveState('success')
-        onSuccess?.(data)
-      } catch (err) {
-        const error = {
-          code: err.code || 'UNKNOWN_ERROR',
-          message: err.message || 'Something went wrong. Please try again.',
-        }
-        setOvalState('error')
-        setWaveState('error')
-        setErrorMessage(error.message)
-        onError?.(error)
-      }
-    }, 400)
+    handleError({ code: err?.state || 'LIVENESS_FAILED', message: FRIENDLY_ERRORS['LIVENESS_FAILED'] })
   }
 
-  // ─── Liveness → UI state: use setTimeout(,0) to avoid synchronous setState in effect ──
-  useEffect(() => {
-    if (mode !== 'liveness') return
-
-    if (livenessState === 'running') {
-      const t = setTimeout(() => {
-        setOvalState('scanning')
-        setWaveState('scanning')
-      }, 0)
-      return () => clearTimeout(t)
-    }
-
-    if (livenessState === 'passed') {
-      // Flag capture — fired by the dependency-free effect below
-      shouldCaptureRef.current = true
-      captureTriggeredRef.current = false
-    }
-
-    if (livenessState === 'failed') {
-      const t = setTimeout(() => {
-        setOvalState('error')
-        setWaveState('error')
-        setErrorMessage('Liveness check failed. Please follow the prompts and try again.')
-      }, 0)
-      return () => clearTimeout(t)
-    }
-  }, [livenessState, mode])
-
-  // ─── Fires handleCapture once when liveness passes (no dep array = runs every render) ──
-  useEffect(() => {
-    if (shouldCaptureRef.current && !captureTriggeredRef.current) {
-      captureTriggeredRef.current = true
-      shouldCaptureRef.current = false
-      handleCapture()
-    }
+  // ─── Credential provider for Amplify ─────────────────────────────────────────
+  const credentialProvider = async () => ({
+    accessKeyId:     sessionData.credentials.accessKeyId,
+    secretAccessKey: sessionData.credentials.secretAccessKey,
+    sessionToken:    sessionData.credentials.sessionToken,
   })
-
-  function handleCameraReady() {
-    setCameraReady(true)
-    if (mode === 'liveness') {
-      setTimeout(() => startLiveness(cameraRef), 1000)
-    } else {
-      setOvalState('idle')
-      setWaveState('idle')
-    }
-  }
-
-  function handleRetry() {
-    setOvalState('idle')
-    setWaveState('idle')
-    setErrorMessage('')
-    shouldCaptureRef.current = false
-    captureTriggeredRef.current = false
-    resetLiveness()
-    if (mode === 'liveness' && cameraReady) {
-      setTimeout(() => startLiveness(cameraRef), 600)
-    }
-  }
-
-  function handleCameraError(err) {
-    setOvalState('error')
-    setWaveState('error')
-    setErrorMessage(err.message)
-    onError?.(err)
-  }
 
   return (
     <div
       className={className}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '32px 24px',
-        borderRadius: '24px',
-        background: isDark
-          ? 'linear-gradient(145deg, #0d0d0d, #111827)'
-          : 'linear-gradient(145deg, #f9fafb, #ffffff)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        padding: '32px 24px', borderRadius: '24px',
+        background: isDark ? 'linear-gradient(145deg, #0d0d0d, #111827)' : 'linear-gradient(145deg, #f9fafb, #ffffff)',
         border: `1px solid ${isDark ? '#1f2937' : '#e5e7eb'}`,
-        boxShadow: isDark
-          ? '0 25px 60px rgba(0,0,0,0.6)'
-          : '0 25px 60px rgba(0,0,0,0.08)',
-        maxWidth: '360px',
-        width: '100%',
-        boxSizing: 'border-box',
-        fontFamily: 'monospace',
-        position: 'relative',
+        boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.6)' : '0 25px 60px rgba(0,0,0,0.08)',
+        maxWidth: '400px', width: '100%', boxSizing: 'border-box', fontFamily: 'monospace',
       }}
     >
-      <p style={{
-        margin: '0 0 8px 0',
-        fontSize: '11px',
-        letterSpacing: '0.2em',
-        textTransform: 'uppercase',
-        color: isDark ? '#6b7280' : '#9ca3af',
-      }}>
+      <p style={{ margin: '0 0 8px 0', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: isDark ? '#6b7280' : '#9ca3af' }}>
         Face Registration
       </p>
 
-      <div style={{ width: '100%', marginBottom: '8px' }}>
+      <div style={{ width: '100%', marginBottom: '16px' }}>
         <SiriWave state={waveState} theme={theme} />
       </div>
 
-      <div style={{ position: 'relative', width: '220px', height: '270px', marginBottom: '24px' }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <CameraView
-            ref={cameraRef}
-            active={true}
-            theme={theme}
-            onReady={handleCameraReady}
-            onError={handleCameraError}
-          />
-        </div>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-          <FaceOval
-            state={ovalState}
-            direction={direction}
-            mode={mode}
-            theme={theme}
-            onSnap={handleCapture}
-          />
-        </div>
-      </div>
-
-      {mode === 'liveness' && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          {['up', 'left', 'right'].map((step, i) => (
-            <motion.div
-              key={step}
-              animate={{
-                background: progress > i ? '#6366f1' : isDark ? '#374151' : '#d1d5db',
-                scale: progress === i + 1 ? [1, 1.3, 1] : 1,
-              }}
-              transition={{ duration: 0.3 }}
-              style={{ width: '8px', height: '8px', borderRadius: '50%' }}
-            />
-          ))}
+      {phase === 'init' && (
+        <div style={{ padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <Spinner />
+          <p style={{ margin: 0, fontSize: '12px', color: isDark ? '#6b7280' : '#9ca3af', letterSpacing: '0.08em' }}>Starting session...</p>
         </div>
       )}
 
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.p
-            key="error-msg"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            style={{
-              margin: '0 0 12px 0',
-              fontSize: '12px',
-              color: '#f87171',
-              textAlign: 'center',
-              lineHeight: 1.5,
-              maxWidth: '260px',
+      {phase === 'liveness' && sessionData && (
+        <div style={{ width: '100%', borderRadius: '16px', overflow: 'hidden' }}>
+          <FaceLivenessDetectorCore
+            sessionId={sessionData.sessionId}
+            region={sessionData.region}
+            onAnalysisComplete={handleAnalysisComplete}
+            onError={handleLivenessError}
+            config={{
+              credentialProvider,
+              systemClockOffset: 0,
             }}
-          >
+          />
+        </div>
+      )}
+
+      {phase === 'processing' && (
+        <StatusCard icon={<Spinner />} message="Registering your face..." isDark={isDark} />
+      )}
+
+      {phase === 'success' && (
+        <StatusCard icon={<span style={{ fontSize: '48px' }}>✓</span>} iconColor="#22c55e" message="Face registered successfully." isDark={isDark} />
+      )}
+
+      {phase === 'error' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '24px 0' }}>
+          <span style={{ fontSize: '48px' }}>✗</span>
+          <p style={{ margin: 0, fontSize: '12px', color: '#f87171', textAlign: 'center', maxWidth: '280px', lineHeight: 1.6 }}>
             {errorMessage}
-          </motion.p>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {ovalState === 'success' && (
-          <motion.p
-            key="success-msg"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            style={{
-              margin: '0 0 12px 0',
-              fontSize: '12px',
-              color: '#4ade80',
-              textAlign: 'center',
-              letterSpacing: '0.05em',
-            }}
-          >
-            Face registered successfully.
-          </motion.p>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {ovalState === 'error' && (
+          </p>
           <motion.button
-            key="retry"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={handleRetry}
-            style={{
-              padding: '10px 28px',
-              borderRadius: '999px',
-              border: '2px solid #ef4444',
-              background: 'transparent',
-              color: '#f87171',
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+            onClick={() => { sessionStarted.current = false; startSession() }}
+            style={{ padding: '10px 28px', borderRadius: '999px', border: '2px solid #ef4444', background: 'transparent', color: '#f87171', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Try Again
           </motion.button>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
+  )
+}
+
+function StatusCard({ icon, iconColor = 'inherit', message, isDark }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '40px 0' }}>
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }} style={{ color: iconColor }}>
+        {icon}
+      </motion.div>
+      <p style={{ margin: 0, fontSize: '12px', color: isDark ? '#9ca3af' : '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        {message}
+      </p>
+    </div>
+  )
+}
+
+function Spinner() {
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      style={{ width: '32px', height: '32px', borderRadius: '50%', border: '3px solid transparent', borderTopColor: '#6366f1', borderRightColor: '#6366f1' }}
+    />
   )
 }
