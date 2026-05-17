@@ -47,7 +47,7 @@ export default function LoginPage() {
         collectionId="face-auth-demo"
         onSuccess={handleSuccess}
         onError={handleError}
-        theme="dark"
+        theme="light"
       />
 
       {authStatus === 'granted' && (

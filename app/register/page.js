@@ -35,7 +35,7 @@ export default function RegisterPage() {
         collectionId="face-auth-demo"
         onSuccess={handleSuccess}
         onError={handleError}
-        theme="dark"
+        theme="light"
       />
 
       {result && (
