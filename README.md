@@ -5,7 +5,7 @@ _A plug-and-play React package for authentication using facial detection and rec
 [![npm version](https://img.shields.io/npm/v/face-auth-kit)](https://www.npmjs.com/package/face-auth-kit)
 [![license](https://img.shields.io/npm/l/face-auth-kit)](https://github.com/yourusername/face-auth-kit)
 
-Powered by **AWS Rekognition Face Liveness**. It's resistant to spoofing via printed photos, deepfakes, high-resolution images, and 3D masks.
+Powered by **AWS Rekognition Face Liveness** - resistant to spoofing via printed photos, deepfakes, high-resolution images, and 3D masks.
 
 ---
 
