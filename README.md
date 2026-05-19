@@ -9,7 +9,7 @@ Powered by **AWS Rekognition Face Liveness** - resistant to spoofing via printed
 
 ---
 
-## Dependencies
+## Core Dependencies
 
 This package depends on the following AWS and UI packages, which are bundled:
 
