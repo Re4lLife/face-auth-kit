@@ -1,6 +1,10 @@
 {
   "name": "face-auth-kit",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Facial recognition authentication components powered by AWS Rekognition Face Liveness",
+  "author": "Osokor Fortune",
+  "license": "MIT",
+  "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "exports": {
@@ -9,36 +13,31 @@
       "require": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
+  "files": ["dist"],
+  "keywords": [
+    "face-recognition",
+    "authentication",
+    "aws-rekognition",
+    "face-liveness",
+    "react",
+    "nextjs"
   ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
     "build:lib": "tsup",
-    "start": "next start",
-    "lint": "eslint"
+    "prepublishOnly": "tsup"
   },
   "dependencies": {
     "@aws-amplify/ui-react-liveness": "^3.6.5",
     "@aws-sdk/client-rekognition": "^3.1045.0",
     "@aws-sdk/client-sts": "^3.1047.0",
-    "aws-amplify": "^6.17.0",
-    "framer-motion": "^12.38.0",
-    "next": ">=13",
-    "react": ">=18",
-    "react-dom": "19.2.4",
-    "react-webcam": "^7.2.0"
+    "framer-motion": "^12.38.0"
   },
   "peerDependencies": {
-    "next": ">=13",
-    "react": ">=18"
+    "react": ">=18",
+    "react-dom": ">=18",
+    "next": ">=13"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
     "tsup": "^8.5.1"
   }
 }
