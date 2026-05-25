@@ -1,6 +1,6 @@
 # face-auth-kit
 
-_A plug-and-play React library for authentication using facial detection and recognition._
+_A plug-and-play React package for authentication using facial detection and recognition._
 
 [![npm version](https://img.shields.io/npm/v/face-auth-kit)](https://www.npmjs.com/package/face-auth-kit)
 [![license](https://img.shields.io/npm/l/face-auth-kit)](https://github.com/yourusername/face-auth-kit)
