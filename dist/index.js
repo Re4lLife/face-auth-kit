@@ -1,3 +1,4 @@
+"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -40,9 +41,11 @@ module.exports = __toCommonJS(index_exports);
 var import_react2 = require("react");
 var import_framer_motion = require("framer-motion");
 var import_ui_react_liveness = require("@aws-amplify/ui-react-liveness");
+var import_styles = require("@aws-amplify/ui-react/styles.css");
 
 // lib/components/internal/SiriWave.jsx
 var import_react = require("react");
+var import_jsx_runtime = require("react/jsx-runtime");
 var STATES = {
   idle: {
     speed: 0.03,
@@ -129,7 +132,7 @@ function SiriWave({ state = "idle", theme = "dark" }) {
     };
   }, [state]);
   const bgColor = theme === "dark" ? "transparent" : "transparent";
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
     "canvas",
     {
       ref: canvasRef,
@@ -150,6 +153,7 @@ function hexToRgba(hex, alpha) {
 }
 
 // lib/components/FaceRegister.jsx
+var import_jsx_runtime2 = require("react/jsx-runtime");
 var FRIENDLY_ERRORS = {
   NO_FACE_DETECTED: "No face detected. Please ensure your face is clearly visible.",
   NO_REFERENCE_IMAGE: "Could not capture your face. Please try again in better lighting.",
@@ -179,7 +183,7 @@ function FaceRegister({
     setPhase("error");
     setWaveState("error");
     setErrorMessage(error.message);
-    onError == null ? void 0 : onError(error);
+    onError?.(error);
   }, [onError]);
   const startSession = (0, import_react2.useCallback)(async () => {
     setPhase("init");
@@ -220,25 +224,25 @@ function FaceRegister({
       if (!res.ok) throw { code: data.code, message: data.message };
       setPhase("success");
       setWaveState("success");
-      onSuccess == null ? void 0 : onSuccess(data);
+      onSuccess?.(data);
     } catch (err) {
       const code = err.code || "AWS_ERROR";
       handleError({ code, message: FRIENDLY_ERRORS[code] || err.message });
     }
   }
   function handleLivenessError(err) {
-    if ((err == null ? void 0 : err.state) === "CONNECTION_TIMEOUT" || (err == null ? void 0 : err.state) === "SERVER_ERROR") {
+    if (err?.state === "CONNECTION_TIMEOUT" || err?.state === "SERVER_ERROR") {
       handleError({ code: "SESSION_EXPIRED", message: FRIENDLY_ERRORS["SESSION_EXPIRED"] });
       return;
     }
-    handleError({ code: (err == null ? void 0 : err.state) || "LIVENESS_FAILED", message: FRIENDLY_ERRORS["LIVENESS_FAILED"] });
+    handleError({ code: err?.state || "LIVENESS_FAILED", message: FRIENDLY_ERRORS["LIVENESS_FAILED"] });
   }
   const credentialProvider = async () => ({
     accessKeyId: sessionData.credentials.accessKeyId,
     secretAccessKey: sessionData.credentials.secretAccessKey,
     sessionToken: sessionData.credentials.sessionToken
   });
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
     "div",
     {
       className,
@@ -255,46 +259,58 @@ function FaceRegister({
         width: "100%",
         boxSizing: "border-box",
         fontFamily: "monospace"
-      }
-    },
-    /* @__PURE__ */ React.createElement("p", { style: { margin: "0 0 8px 0", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: isDark ? "#6b7280" : "#9ca3af" } }, "Face Registration"),
-    /* @__PURE__ */ React.createElement("div", { style: { width: "100%", marginBottom: "16px" } }, /* @__PURE__ */ React.createElement(SiriWave, { state: waveState, theme })),
-    phase === "init" && /* @__PURE__ */ React.createElement("div", { style: { padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" } }, /* @__PURE__ */ React.createElement(Spinner, null), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#6b7280" : "#9ca3af", letterSpacing: "0.08em" } }, "Starting session...")),
-    phase === "liveness" && sessionData && /* @__PURE__ */ React.createElement("div", { style: { width: "100%", borderRadius: "16px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
-      import_ui_react_liveness.FaceLivenessDetectorCore,
-      {
-        sessionId: sessionData.sessionId,
-        region: sessionData.region,
-        onAnalysisComplete: handleAnalysisComplete,
-        onError: handleLivenessError,
-        config: {
-          credentialProvider,
-          systemClockOffset: 0
-        }
-      }
-    )),
-    phase === "processing" && /* @__PURE__ */ React.createElement(StatusCard, { icon: /* @__PURE__ */ React.createElement(Spinner, null), message: "Registering your face...", isDark }),
-    phase === "success" && /* @__PURE__ */ React.createElement(StatusCard, { icon: /* @__PURE__ */ React.createElement("span", { style: { fontSize: "48px" } }, "\u2713"), iconColor: "#22c55e", message: "Face registered successfully.", isDark }),
-    phase === "error" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "24px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: "48px" } }, "\u2717"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: "#f87171", textAlign: "center", maxWidth: "280px", lineHeight: 1.6 } }, errorMessage), /* @__PURE__ */ React.createElement(
-      import_framer_motion.motion.button,
-      {
-        whileHover: { scale: 1.04 },
-        whileTap: { scale: 0.97 },
-        onClick: () => {
-          sessionStarted.current = false;
-          startSession();
-        },
-        style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }
       },
-      "Try Again"
-    ))
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { style: { margin: "0 0 8px 0", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: isDark ? "#6b7280" : "#9ca3af" }, children: "Face Registration" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { width: "100%", marginBottom: "16px" }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(SiriWave, { state: waveState, theme }) }),
+        phase === "init" && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Spinner, {}),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#6b7280" : "#9ca3af", letterSpacing: "0.08em" }, children: "Starting session..." })
+        ] }),
+        phase === "liveness" && sessionData && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { width: "100%", borderRadius: "16px", overflow: "hidden" }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+          import_ui_react_liveness.FaceLivenessDetectorCore,
+          {
+            sessionId: sessionData.sessionId,
+            region: sessionData.region,
+            onAnalysisComplete: handleAnalysisComplete,
+            onError: handleLivenessError,
+            config: {
+              credentialProvider,
+              systemClockOffset: 0
+            }
+          }
+        ) }),
+        phase === "processing" && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(StatusCard, { icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Spinner, {}), message: "Registering your face...", isDark }),
+        phase === "success" && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(StatusCard, { icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { fontSize: "48px" }, children: "\u2713" }), iconColor: "#22c55e", message: "Face registered successfully.", isDark }),
+        phase === "error" && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "24px 0" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { fontSize: "48px" }, children: "\u2717" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { style: { margin: 0, fontSize: "12px", color: "#f87171", textAlign: "center", maxWidth: "280px", lineHeight: 1.6 }, children: errorMessage }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+            import_framer_motion.motion.button,
+            {
+              whileHover: { scale: 1.04 },
+              whileTap: { scale: 0.97 },
+              onClick: () => {
+                sessionStarted.current = false;
+                startSession();
+              },
+              style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" },
+              children: "Try Again"
+            }
+          )
+        ] })
+      ]
+    }
   );
 }
 function StatusCard({ icon, iconColor = "inherit", message, isDark }) {
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" } }, /* @__PURE__ */ React.createElement(import_framer_motion.motion.div, { initial: { scale: 0 }, animate: { scale: 1 }, transition: { type: "spring", stiffness: 260, damping: 20 }, style: { color: iconColor } }, icon), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#9ca3af" : "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase" } }, message));
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_framer_motion.motion.div, { initial: { scale: 0 }, animate: { scale: 1 }, transition: { type: "spring", stiffness: 260, damping: 20 }, style: { color: iconColor }, children: icon }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#9ca3af" : "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase" }, children: message })
+  ] });
 }
 function Spinner() {
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
     import_framer_motion.motion.div,
     {
       animate: { rotate: 360 },
@@ -308,6 +324,8 @@ function Spinner() {
 var import_react3 = require("react");
 var import_framer_motion2 = require("framer-motion");
 var import_ui_react_liveness2 = require("@aws-amplify/ui-react-liveness");
+var import_styles2 = require("@aws-amplify/ui-react/styles.css");
+var import_jsx_runtime3 = require("react/jsx-runtime");
 var FRIENDLY_ERRORS2 = {
   NO_MATCH: "Face not recognised. Please try again or re-register.",
   NO_FACE_DETECTED: "No face detected. Please ensure your face is clearly visible.",
@@ -338,7 +356,7 @@ function FaceLogin({
     setPhase("error");
     setWaveState("error");
     setErrorMessage(error.message);
-    onError == null ? void 0 : onError(error);
+    onError?.(error);
   }, [onError]);
   const startSession = (0, import_react3.useCallback)(async () => {
     sessionStarted.current = true;
@@ -380,25 +398,25 @@ function FaceLogin({
       if (!res.ok) throw { code: data.code, message: data.message };
       setPhase("success");
       setWaveState("success");
-      onSuccess == null ? void 0 : onSuccess(data);
+      onSuccess?.(data);
     } catch (err) {
       const code = err.code || "AWS_ERROR";
       handleError({ code, message: FRIENDLY_ERRORS2[code] || err.message });
     }
   }
   function handleLivenessError(err) {
-    if ((err == null ? void 0 : err.state) === "CONNECTION_TIMEOUT" || (err == null ? void 0 : err.state) === "SERVER_ERROR") {
+    if (err?.state === "CONNECTION_TIMEOUT" || err?.state === "SERVER_ERROR") {
       handleError({ code: "SESSION_EXPIRED", message: FRIENDLY_ERRORS2["SESSION_EXPIRED"] });
       return;
     }
-    handleError({ code: (err == null ? void 0 : err.state) || "LIVENESS_FAILED", message: FRIENDLY_ERRORS2["LIVENESS_FAILED"] });
+    handleError({ code: err?.state || "LIVENESS_FAILED", message: FRIENDLY_ERRORS2["LIVENESS_FAILED"] });
   }
   const credentialProvider = async () => ({
     accessKeyId: sessionData.credentials.accessKeyId,
     secretAccessKey: sessionData.credentials.secretAccessKey,
     sessionToken: sessionData.credentials.sessionToken
   });
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
     "div",
     {
       className,
@@ -415,46 +433,58 @@ function FaceLogin({
         width: "100%",
         boxSizing: "border-box",
         fontFamily: "monospace"
-      }
-    },
-    /* @__PURE__ */ React.createElement("p", { style: { margin: "0 0 8px 0", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: isDark ? "#6b7280" : "#9ca3af" } }, "Face Login"),
-    /* @__PURE__ */ React.createElement("div", { style: { width: "100%", marginBottom: "16px" } }, /* @__PURE__ */ React.createElement(SiriWave, { state: waveState, theme })),
-    phase === "init" && /* @__PURE__ */ React.createElement("div", { style: { padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" } }, /* @__PURE__ */ React.createElement(Spinner2, null), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#6b7280" : "#9ca3af", letterSpacing: "0.08em" } }, "Starting session...")),
-    phase === "liveness" && sessionData && /* @__PURE__ */ React.createElement("div", { style: { width: "100%", borderRadius: "16px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(
-      import_ui_react_liveness2.FaceLivenessDetectorCore,
-      {
-        sessionId: sessionData.sessionId,
-        region: sessionData.region,
-        onAnalysisComplete: handleAnalysisComplete,
-        onError: handleLivenessError,
-        config: {
-          credentialProvider,
-          systemClockOffset: clockOffset
-        }
-      }
-    )),
-    phase === "processing" && /* @__PURE__ */ React.createElement(StatusCard2, { icon: /* @__PURE__ */ React.createElement(Spinner2, null), message: "Verifying your identity...", isDark }),
-    phase === "success" && /* @__PURE__ */ React.createElement(StatusCard2, { icon: /* @__PURE__ */ React.createElement("span", { style: { fontSize: "48px" } }, "\u2713"), iconColor: "#22c55e", message: "Identity verified.", isDark }),
-    phase === "error" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "24px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: "48px" } }, "\u2717"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: "#f87171", textAlign: "center", maxWidth: "280px", lineHeight: 1.6 } }, errorMessage), /* @__PURE__ */ React.createElement(
-      import_framer_motion2.motion.button,
-      {
-        whileHover: { scale: 1.04 },
-        whileTap: { scale: 0.97 },
-        onClick: () => {
-          sessionStarted.current = false;
-          startSession();
-        },
-        style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }
       },
-      "Try Again"
-    ))
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { style: { margin: "0 0 8px 0", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: isDark ? "#6b7280" : "#9ca3af" }, children: "Face Login" }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { width: "100%", marginBottom: "16px" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(SiriWave, { state: waveState, theme }) }),
+        phase === "init" && /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { style: { padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Spinner2, {}),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#6b7280" : "#9ca3af", letterSpacing: "0.08em" }, children: "Starting session..." })
+        ] }),
+        phase === "liveness" && sessionData && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { width: "100%", borderRadius: "16px", overflow: "hidden" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+          import_ui_react_liveness2.FaceLivenessDetectorCore,
+          {
+            sessionId: sessionData.sessionId,
+            region: sessionData.region,
+            onAnalysisComplete: handleAnalysisComplete,
+            onError: handleLivenessError,
+            config: {
+              credentialProvider,
+              systemClockOffset: clockOffset
+            }
+          }
+        ) }),
+        phase === "processing" && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(StatusCard2, { icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Spinner2, {}), message: "Verifying your identity...", isDark }),
+        phase === "success" && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(StatusCard2, { icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { style: { fontSize: "48px" }, children: "\u2713" }), iconColor: "#22c55e", message: "Identity verified.", isDark }),
+        phase === "error" && /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "24px 0" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { style: { fontSize: "48px" }, children: "\u2717" }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { style: { margin: 0, fontSize: "12px", color: "#f87171", textAlign: "center", maxWidth: "280px", lineHeight: 1.6 }, children: errorMessage }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            import_framer_motion2.motion.button,
+            {
+              whileHover: { scale: 1.04 },
+              whileTap: { scale: 0.97 },
+              onClick: () => {
+                sessionStarted.current = false;
+                startSession();
+              },
+              style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" },
+              children: "Try Again"
+            }
+          )
+        ] })
+      ]
+    }
   );
 }
 function StatusCard2({ icon, iconColor = "inherit", message, isDark }) {
-  return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" } }, /* @__PURE__ */ React.createElement(import_framer_motion2.motion.div, { initial: { scale: 0 }, animate: { scale: 1 }, transition: { type: "spring", stiffness: 260, damping: 20 }, style: { color: iconColor } }, icon), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#9ca3af" : "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase" } }, message));
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", padding: "40px 0" }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_framer_motion2.motion.div, { initial: { scale: 0 }, animate: { scale: 1 }, transition: { type: "spring", stiffness: 260, damping: 20 }, style: { color: iconColor }, children: icon }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("p", { style: { margin: 0, fontSize: "12px", color: isDark ? "#9ca3af" : "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase" }, children: message })
+  ] });
 }
 function Spinner2() {
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
     import_framer_motion2.motion.div,
     {
       animate: { rotate: 360 },
@@ -553,7 +583,6 @@ function jsonResponse(status, body) {
 // lib/handlers/faceLivenessResultHandler.js
 var import_client_rekognition3 = require("@aws-sdk/client-rekognition");
 async function faceLivenessResultHandler(req) {
-  var _a, _b, _c;
   let body;
   try {
     body = await req.json();
@@ -575,7 +604,7 @@ async function faceLivenessResultHandler(req) {
       });
     }
     const livenessConfidence = livenessRes.Confidence;
-    const referenceImageBytes = (_a = livenessRes.ReferenceImage) == null ? void 0 : _a.Bytes;
+    const referenceImageBytes = livenessRes.ReferenceImage?.Bytes;
     if (!referenceImageBytes) {
       return jsonResponse2(400, {
         code: "NO_REFERENCE_IMAGE",
@@ -605,8 +634,8 @@ async function faceLivenessResultHandler(req) {
         faceId: record.Face.FaceId,
         confidence: record.Face.Confidence,
         faceDetails: {
-          ageRange: ((_b = record.FaceDetail) == null ? void 0 : _b.AgeRange) || null,
-          quality: ((_c = record.FaceDetail) == null ? void 0 : _c.Quality) || null
+          ageRange: record.FaceDetail?.AgeRange || null,
+          quality: record.FaceDetail?.Quality || null
         }
       });
     }
