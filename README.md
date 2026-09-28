@@ -185,7 +185,7 @@ You need two API routes in your Next.js app. These are **your** routes — you c
 
 **`app/api/face-liveness-session/route.js`**
 ```js
-import { faceLivenessSessionHandler } from 'face-auth-kit'
+import { faceLivenessSessionHandler } from 'face-auth-kit/server'
 
 export async function POST(req) {
   return faceLivenessSessionHandler(req)
@@ -194,7 +194,7 @@ export async function POST(req) {
 
 **`app/api/face-liveness-result/route.js`**
 ```js
-import { faceLivenessResultHandler } from 'face-auth-kit'
+import { faceLivenessResultHandler } from 'face-auth-kit/server'
 
 export async function POST(req) {
   return faceLivenessResultHandler(req)
