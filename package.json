@@ -1,6 +1,6 @@
 {
   "name": "face-auth-kit",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Facial recognition authentication components powered by AWS Rekognition Face Liveness",
   "author": "Osokor Fortune",
   "license": "MIT",
@@ -8,8 +8,14 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "exports": {
-    ".": { "import": "./dist/index.mjs", "require": "./dist/index.js" },
-    "./server": { "import": "./dist/server.mjs", "require": "./dist/server.js" }
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
   },
   "files": [
     "dist"
