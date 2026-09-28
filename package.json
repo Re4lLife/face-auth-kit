@@ -8,10 +8,8 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
+    ".": { "import": "./dist/index.mjs", "require": "./dist/index.js" },
+    "./server": { "import": "./dist/server.mjs", "require": "./dist/server.js" }
   },
   "files": [
     "dist"
