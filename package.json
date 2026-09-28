@@ -1,6 +1,6 @@
 {
   "name": "face-auth-kit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Facial recognition authentication components powered by AWS Rekognition Face Liveness",
   "author": "Osokor Fortune",
   "license": "MIT",
