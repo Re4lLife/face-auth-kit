@@ -13,7 +13,9 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "face-recognition",
     "authentication",
@@ -27,15 +29,17 @@
     "prepublishOnly": "tsup"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "^6.15.6",
     "@aws-amplify/ui-react-liveness": "^3.6.5",
     "@aws-sdk/client-rekognition": "^3.1045.0",
     "@aws-sdk/client-sts": "^3.1047.0",
+    "aws-amplify": "^6.22.0",
     "framer-motion": "^12.38.0"
   },
   "peerDependencies": {
+    "next": ">=13",
     "react": ">=18",
-    "react-dom": ">=18",
-    "next": ">=13"
+    "react-dom": ">=18"
   },
   "devDependencies": {
     "tsup": "^8.5.1"
