@@ -48,5 +48,13 @@
   "devDependencies": {
     "tsup": "^8.5.1",
     "typescript": "^7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Re4lLife/face-auth-kit.git"
+  },
+  "homepage": "https://github.com/Re4lLife/face-auth-kit#readme",
+  "bugs": {
+    "url": "https://github.com/Re4lLife/face-auth-kit/issues"
   }
 }

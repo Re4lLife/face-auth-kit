@@ -157,6 +157,8 @@ function FaceRegister({
   onError,
   sessionApiEndpoint = "/api/face-liveness-session",
   resultApiEndpoint = "/api/face-liveness-result",
+  faceModelUrl,
+  binaryPath,
   theme = "dark",
   className = ""
 }) {
@@ -165,7 +167,6 @@ function FaceRegister({
   const [errorMessage, setErrorMessage] = (0, import_react2.useState)("");
   const [waveState, setWaveState] = (0, import_react2.useState)("idle");
   const clockOffsetRef = (0, import_react2.useRef)(0);
-  const sessionStarted = (0, import_react2.useRef)(false);
   const isDark = theme === "dark";
   const handleError = (0, import_react2.useCallback)((error) => {
     setPhase("error");
@@ -191,14 +192,16 @@ function FaceRegister({
       handleError({ code, message: FRIENDLY_ERRORS[code] || err.message });
     }
   }, [sessionApiEndpoint, handleError]);
+  const startSessionRef = (0, import_react2.useRef)(startSession);
   (0, import_react2.useEffect)(() => {
-    if (sessionStarted.current) return;
-    sessionStarted.current = true;
+    startSessionRef.current = startSession;
+  });
+  (0, import_react2.useEffect)(() => {
     const t = setTimeout(() => {
-      startSession();
+      startSessionRef.current();
     }, 0);
     return () => clearTimeout(t);
-  }, [startSession]);
+  }, []);
   async function handleAnalysisComplete() {
     setPhase("processing");
     setWaveState("scanning");
@@ -264,7 +267,9 @@ function FaceRegister({
             onError: handleLivenessError,
             config: {
               credentialProvider,
-              systemClockOffset: 0
+              systemClockOffset: 0,
+              faceModelUrl,
+              binaryPath
             }
           }
         ) }),
@@ -278,10 +283,7 @@ function FaceRegister({
             {
               whileHover: { scale: 1.04 },
               whileTap: { scale: 0.97 },
-              onClick: () => {
-                sessionStarted.current = false;
-                startSession();
-              },
+              onClick: () => startSession(),
               style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" },
               children: "Try Again"
             }
@@ -330,6 +332,8 @@ function FaceLogin({
   onError,
   sessionApiEndpoint = "/api/face-liveness-session",
   resultApiEndpoint = "/api/face-liveness-result",
+  faceModelUrl,
+  binaryPath,
   theme = "dark",
   className = ""
 }) {
@@ -339,7 +343,6 @@ function FaceLogin({
   const [waveState, setWaveState] = (0, import_react3.useState)("idle");
   const [clockOffset, setClockOffset] = (0, import_react3.useState)(0);
   const isDark = theme === "dark";
-  const sessionStarted = (0, import_react3.useRef)(false);
   const handleError = (0, import_react3.useCallback)((error) => {
     setPhase("error");
     setWaveState("error");
@@ -347,7 +350,6 @@ function FaceLogin({
     onError?.(error);
   }, [onError]);
   const startSession = (0, import_react3.useCallback)(async () => {
-    sessionStarted.current = true;
     setPhase("init");
     setErrorMessage("");
     setWaveState("scanning");
@@ -365,14 +367,16 @@ function FaceLogin({
       handleError({ code, message: FRIENDLY_ERRORS2[code] || err.message });
     }
   }, [sessionApiEndpoint, handleError]);
+  const startSessionRef = (0, import_react3.useRef)(startSession);
   (0, import_react3.useEffect)(() => {
-    if (sessionStarted.current) return;
-    sessionStarted.current = true;
+    startSessionRef.current = startSession;
+  });
+  (0, import_react3.useEffect)(() => {
     const t = setTimeout(() => {
-      startSession();
+      startSessionRef.current();
     }, 0);
     return () => clearTimeout(t);
-  }, [startSession]);
+  }, []);
   async function handleAnalysisComplete() {
     setPhase("processing");
     setWaveState("scanning");
@@ -438,7 +442,9 @@ function FaceLogin({
             onError: handleLivenessError,
             config: {
               credentialProvider,
-              systemClockOffset: clockOffset
+              systemClockOffset: clockOffset,
+              faceModelUrl,
+              binaryPath
             }
           }
         ) }),
@@ -452,10 +458,7 @@ function FaceLogin({
             {
               whileHover: { scale: 1.04 },
               whileTap: { scale: 0.97 },
-              onClick: () => {
-                sessionStarted.current = false;
-                startSession();
-              },
+              onClick: () => startSession(),
               style: { padding: "10px 28px", borderRadius: "999px", border: "2px solid #ef4444", background: "transparent", color: "#f87171", fontSize: "11px", fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" },
               children: "Try Again"
             }

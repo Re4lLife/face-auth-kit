@@ -22,6 +22,8 @@ export default function FaceRegister({
   onError,
   sessionApiEndpoint = '/api/face-liveness-session',
   resultApiEndpoint  = '/api/face-liveness-result',
+  faceModelUrl,
+  binaryPath,
   theme = 'dark',
   className = '',
 }) {
@@ -32,7 +34,6 @@ export default function FaceRegister({
 
   // clock offset stored in ref — avoids Date.now() during render
   const clockOffsetRef = useRef(0)
-  const sessionStarted = useRef(false)
 
   const isDark = theme === 'dark'
 
@@ -68,13 +69,13 @@ const startSession = useCallback(async () => {
   }
 }, [sessionApiEndpoint, handleError])
 
-  // ─── Kick off on mount — guard prevents double-fire in React strict mode ──────
+  // ─── Kick off once on mount (safe under React Strict Mode) ────────────────────
+  const startSessionRef = useRef(startSession)
+  useEffect(() => { startSessionRef.current = startSession })
   useEffect(() => {
-    if (sessionStarted.current) return
-    sessionStarted.current = true
-    const t = setTimeout(() => { startSession() }, 0)
+    const t = setTimeout(() => { startSessionRef.current() }, 0)
     return () => clearTimeout(t)
-  }, [startSession])
+  }, [])
 
   // ─── Amplify complete → fetch result ─────────────────────────────────────────
   async function handleAnalysisComplete() {
@@ -151,6 +152,8 @@ const startSession = useCallback(async () => {
             config={{
               credentialProvider,
               systemClockOffset: 0,
+              faceModelUrl,
+              binaryPath,
             }}
           />
         </div>
@@ -172,7 +175,7 @@ const startSession = useCallback(async () => {
           </p>
           <motion.button
             whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-            onClick={() => { sessionStarted.current = false; startSession() }}
+            onClick={() => startSession()}
             style={{ padding: '10px 28px', borderRadius: '999px', border: '2px solid #ef4444', background: 'transparent', color: '#f87171', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Try Again
